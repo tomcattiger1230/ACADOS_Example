@@ -4,7 +4,7 @@
 Author: Wei Luo
 Date: 2021-03-15 23:02:08
 LastEditors: Wei Luo
-LastEditTime: 2021-03-16 00:19:13
+LastEditTime: 2021-03-16 00:21:49
 Note: Note
 '''
 
@@ -86,8 +86,10 @@ class MobileRobotOptimizer(object):
 
 
         x_ref = np.zeros(nx)
+        u_ref = np.zeros(nu)
         # initial state
         ocp.constraints.x0 = x_ref
+        ocp.cost.yref = np.concatenate((x_ref, u_ref))
 
         # solver options
         ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
