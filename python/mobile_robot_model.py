@@ -14,6 +14,8 @@ from acados_template import AcadosModel
 
 class MobileRobotModel(object):
     def __init__(self,):
+        model = types.SimpleNamespace()
+        constraint = types.SimpleNamespace()
         # control inputs
         v = ca.SX.sym('v')
         omega = ca.SX.sym('omega')
@@ -33,7 +35,7 @@ class MobileRobotModel(object):
         # acados model
         x_dot = ca.SX.sym('x_dot', len(rhs))
         f_impl = x_dot - f(states, controls)
-        model = AcadosModel()
+        
         model.f_expl_expr = f(states, controls)
         model.f_impl_expr = f_impl
         model.x = states
@@ -42,4 +44,12 @@ class MobileRobotModel(object):
         model.p = []
         model.name = 'mobile_robot'
 
+        # constraint
+        constraint.v_max = 0.6
+        constraint.v_min = -0.6
+        constraint.omega_max = np.pi/4.0
+        constraint.omega_min = -np.pi/4.0
+        constraint.expr = ca.vcat([v, omega])
+
         self.model = model
+        self.constraint = constraint
