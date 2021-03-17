@@ -52,7 +52,7 @@
 #define NZ     0
 #define NU     2
 #define NP     0
-#define NBX    0
+#define NBX    2
 #define NBX0   3
 #define NBU    2
 #define NSBX   0
@@ -71,7 +71,7 @@
 #define NGN    0
 #define NY0    5
 #define NY     5
-#define NYN    0
+#define NYN    3
 #define N      100
 #define NH     0
 #define NPHI   0
@@ -110,10 +110,9 @@ int mobile_robot_acados_create(nlp_solver_capsule * capsule)
     ************************************************/
     ocp_nlp_plan * nlp_solver_plan = ocp_nlp_plan_create(N);
     capsule->nlp_solver_plan = nlp_solver_plan;
-    nlp_solver_plan->nlp_solver = SQP;
-    
+    nlp_solver_plan->nlp_solver = SQP_RTI;
 
-    nlp_solver_plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
+    nlp_solver_plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
     nlp_solver_plan->nlp_cost[0] = LINEAR_LS;
     for (int i = 1; i < N; i++)
@@ -564,6 +563,37 @@ int mobile_robot_acados_create(nlp_solver_capsule * capsule)
     // terminal cost
 
 
+    double yref_e[NYN];
+    
+    yref_e[0] = 0;
+    yref_e[1] = 0;
+    yref_e[2] = 0;
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
+
+    double W_e[NYN*NYN];
+    
+    W_e[0+(NYN) * 0] = 1;
+    W_e[0+(NYN) * 1] = 0;
+    W_e[0+(NYN) * 2] = 0;
+    W_e[1+(NYN) * 0] = 0;
+    W_e[1+(NYN) * 1] = 5;
+    W_e[1+(NYN) * 2] = 0;
+    W_e[2+(NYN) * 0] = 0;
+    W_e[2+(NYN) * 1] = 0;
+    W_e[2+(NYN) * 2] = 0.1;
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
+    double Vx_e[NYN*NX];
+    
+    Vx_e[0+(NYN) * 0] = 1;
+    Vx_e[0+(NYN) * 1] = 0;
+    Vx_e[0+(NYN) * 2] = 0;
+    Vx_e[1+(NYN) * 0] = 0;
+    Vx_e[1+(NYN) * 1] = 1;
+    Vx_e[1+(NYN) * 2] = 0;
+    Vx_e[2+(NYN) * 0] = 0;
+    Vx_e[2+(NYN) * 1] = 0;
+    Vx_e[2+(NYN) * 2] = 1;
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
 
 
 
@@ -636,6 +666,26 @@ int mobile_robot_acados_create(nlp_solver_capsule * capsule)
 
 
 
+    // x
+    int idxbx[NBX];
+    
+    idxbx[0] = 0;
+    idxbx[1] = 1;
+    double lbx[NBX];
+    double ubx[NBX];
+    
+    lbx[0] = -2;
+    ubx[0] = 2;
+    lbx[1] = -2;
+    ubx[1] = 2;
+
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxbx", idxbx);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lbx", lbx);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubx", ubx);
+    }
+
 
 
 
@@ -692,27 +742,14 @@ int mobile_robot_acados_create(nlp_solver_capsule * capsule)
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "levenberg_marquardt", &levenberg_marquardt);
 
     /* options QP solver */
+    int qp_solver_cond_N;
+    // NOTE: there is no condensing happening here!
+    qp_solver_cond_N = N;
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "qp_cond_N", &qp_solver_cond_N);
+
 
     int qp_solver_iter_max = 50;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "qp_iter_max", &qp_solver_iter_max);
-    // set SQP specific options
-    double nlp_solver_tol_stat = 0.000001;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "tol_stat", &nlp_solver_tol_stat);
-
-    double nlp_solver_tol_eq = 0.000001;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "tol_eq", &nlp_solver_tol_eq);
-
-    double nlp_solver_tol_ineq = 0.000001;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "tol_ineq", &nlp_solver_tol_ineq);
-
-    double nlp_solver_tol_comp = 0.000001;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "tol_comp", &nlp_solver_tol_comp);
-
-    int nlp_solver_max_iter = 100;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "max_iter", &nlp_solver_max_iter);
-
-    int initialize_t_slacks = 0;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "initialize_t_slacks", &initialize_t_slacks);
 
     int print_level = 0;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "print_level", &print_level);

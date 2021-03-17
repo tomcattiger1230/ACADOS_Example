@@ -78,6 +78,12 @@ i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for shooting nodes 1 to N-1,',...
                     ' size [495]\n ');
 i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [3]\n ');
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [198]\n ');
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [198]\n ');
+i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [200]\n ');
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [200]\n ');
