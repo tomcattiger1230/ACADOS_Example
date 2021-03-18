@@ -12,7 +12,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -DEXT_DEP -fdiagnostics-show-option
 # include Eigen3
 find_package(PkgConfig)
 pkg_search_module(Eigen3 REQUIRED eigen3)
-include_directories(/usr/local/include/eigen3)
+include_directories(${Eigen3_INCLUDE_DIRS})
+# include_directories(/usr/local/include/eigen3)
 
 # include some more paths
 include_directories($ENV{ACADOS_SOURCE_DIR}/include)
