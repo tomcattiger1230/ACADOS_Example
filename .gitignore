@@ -131,7 +131,7 @@ dmypy.json
 .DS_Store
 .vscode/
 .idea/
-./c/cmake-build-debug/
-./c/build/
-./python/c_generated_code/
-./python/*.json
+c/cmake-build-debug/
+c/build/
+python/c_generated_code/
+python/*.json
