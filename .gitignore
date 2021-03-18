@@ -134,4 +134,4 @@ dmypy.json
 ./c/cmake-build-debug/
 ./c/build/
 ./python/c_generated_code/
-./python/mobile_robot_acados_ocp.json
+./python/*.json
