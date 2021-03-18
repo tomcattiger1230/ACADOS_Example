@@ -130,3 +130,6 @@ dmypy.json
 
 .DS_Store
 .vscode/
+.idea/
+./c/cmake-build-debug
+./c/build

@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <chrono>
 
 #include <Eigen/Dense>
 
@@ -27,5 +28,8 @@ double x_target[3];
 double x_state[5];
 double x_current[3];
 double u_current[3];
+int N;
+int nx;
+int nu;
 
 #endif //ACADOS_TEST_MOBILE_ROBOT_APP_H

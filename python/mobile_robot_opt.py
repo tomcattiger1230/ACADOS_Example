@@ -12,6 +12,7 @@ import os
 import sys
 import shutil
 import errno
+import timeit
 
 from mobile_robot_model import MobileRobotModel
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
@@ -118,6 +119,7 @@ class MobileRobotOptimizer(object):
         x_current = x0
         simX[0, :] = x0.reshape(1, -1)
         xs_between = np.concatenate((xs, np.zeros(2)))
+        time_record = np.zeros(self.N)
 
         # closed loop
         self.solver.set(self.N, 'yref', xs)
@@ -126,6 +128,7 @@ class MobileRobotOptimizer(object):
 
         for i in range(self.N):
             # solve ocp
+            start = timeit.default_timer()
             ##  set inertial (stage 0)
             self.solver.set(0, 'lbx', x_current)
             self.solver.set(0, 'ubx', x_current)
@@ -135,8 +138,7 @@ class MobileRobotOptimizer(object):
                 raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
 
             simU[i, :] = self.solver.get(0, 'u')
-            print(simU[i, :])
-
+            time_record[i] =  timeit.default_timer() - start
             # simulate system
             self.integrator.set('x', x_current)
             self.integrator.set('u', simU[i, :])
@@ -148,7 +150,11 @@ class MobileRobotOptimizer(object):
             # update
             x_current = self.integrator.get('x')
             simX[i+1, :] = x_current
-        Draw_MPC_point_stabilization_v1(rob_diam=0.3, init_state=x0, target_state=xs, robot_states=simX, )
+
+        print("average estimation time is {}".format(time_record.mean()))
+        print("max estimation time is {}".format(time_record.max()))
+        print("min estimation time is {}".format(time_record.min()))
+        # Draw_MPC_point_stabilization_v1(rob_diam=0.3, init_state=x0, target_state=xs, robot_states=simX, )
 
 if __name__ == '__main__':
     mobile_robot_model = MobileRobotModel()
