@@ -154,10 +154,10 @@ class MobileRobotOptimizer(object):
         print("average estimation time is {}".format(time_record.mean()))
         print("max estimation time is {}".format(time_record.max()))
         print("min estimation time is {}".format(time_record.min()))
-        # Draw_MPC_point_stabilization_v1(rob_diam=0.3, init_state=x0, target_state=xs, robot_states=simX, )
+        Draw_MPC_point_stabilization_v1(rob_diam=0.3, init_state=x0, target_state=xs, robot_states=simX, )
 
 if __name__ == '__main__':
     mobile_robot_model = MobileRobotModel()
     opt = MobileRobotOptimizer(m_model=mobile_robot_model.model,
-                               m_constraint=mobile_robot_model.constraint, t_horizon=20, n_nodes=100)
+                               m_constraint=mobile_robot_model.constraint, t_horizon=1, n_nodes=100)
     opt.simulation(x0=np.array([0, 0, 0]), xs=np.array([2., 2., 0.]))
