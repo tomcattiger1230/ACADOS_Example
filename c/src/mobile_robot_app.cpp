@@ -8,16 +8,17 @@ int main()
 {
     // create a capsule according to the pre-defined model
     mobile_robot_solver_capsule *acados_ocp_capsule = mobile_robot_acados_create_capsule();
-
+    int N = MOBILE_ROBOT_N;
     // optimizer
-    status = mobile_robot_acados_create(acados_ocp_capsule);
-
+    // status = mobile_robot_acados_create(acados_ocp_capsule);
+    double* new_time_steps = NULL;
+    int status = mobile_robot_acados_create_with_discretization(acados_ocp_capsule, N, new_time_steps);
     if (status)
     {
         printf("mobile_robot_acados_create() returned status %d. Exiting.\n", status);
         exit(1);
     }
-    sim_solver_capsule *sim_capsule = mobile_robot_acados_sim_solver_create_capsule();
+    mobile_robot_sim_solver_capsule *sim_capsule = mobile_robot_acados_sim_solver_create_capsule();
     status = mobile_robot_acados_sim_create(sim_capsule);
     sim_config *mobile_robot_sim_config = mobile_robot_acados_get_sim_config(sim_capsule);
     void *mobile_robot_sim_dims = mobile_robot_acados_get_sim_dims(sim_capsule);
@@ -41,7 +42,7 @@ int main()
     N = nlp_dims->N;
     nx = *nlp_dims->nx;
     nu = *nlp_dims->nu;
-    printf("time horizion is %d, with state %d and input %d \n", N, nx, nu);
+    printf("time horizon is %d, with state %d and input %d \n", N, nx, nu);
 
     Eigen::MatrixXd simX((N + 1), nx);
     Eigen::MatrixXd simU(N, nu);
@@ -73,8 +74,8 @@ int main()
     for (int ii = 0; ii < N; ii++)
     {
         auto t_start = std::chrono::high_resolution_clock::now();
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", x_current);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x_current);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "lbx", x_current);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "ubx", x_current);
 
         status = mobile_robot_acados_solve(acados_ocp_capsule);
         //        ocp_nlp_get(nlp_config, nlp_solver, "time_tot", &elapsed_time);
