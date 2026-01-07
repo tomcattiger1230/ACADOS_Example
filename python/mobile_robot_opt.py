@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 # coding=UTF-8
-'''
+"""
 Author: Wei Luo
 Date: 2021-03-15 23:02:08
 LastEditors: Wei Luo
-LastEditTime: 2021-03-17 23:29:04
+LastEditTime: 2026-01-07 11:32:33
 Note: Note
-'''
+"""
 
 import os
 import sys
 import shutil
 import errno
 import timeit
+import matplotlib
 
+matplotlib.use("TkAgg")
 from mobile_robot_model import MobileRobotModel
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 
@@ -22,6 +24,7 @@ import numpy as np
 import scipy.linalg
 
 from draw import Draw_MPC_point_stabilization_v1
+
 
 def safe_mkdir_recursive(directory, overwrite=False):
     if not os.path.exists(directory):
@@ -37,7 +40,7 @@ def safe_mkdir_recursive(directory, overwrite=False):
             try:
                 shutil.rmtree(directory)
             except:
-                print('Error while removing directory {}'.format(directory))
+                print("Error while removing directory {}".format(directory))
 
 
 class MobileRobotOptimizer(object):
@@ -48,9 +51,9 @@ class MobileRobotOptimizer(object):
 
         # Ensure current working directory is current folder
         os.chdir(os.path.dirname(os.path.realpath(__file__)))
-        self.acados_models_dir = './acados_models'
+        self.acados_models_dir = "./acados_models"
         safe_mkdir_recursive(os.path.join(os.getcwd(), self.acados_models_dir))
-        acados_source_path = os.environ['ACADOS_SOURCE_DIR']
+        acados_source_path = os.environ["ACADOS_SOURCE_DIR"]
         sys.path.insert(0, acados_source_path)
 
         nx = model.x.size()[0]
@@ -62,10 +65,8 @@ class MobileRobotOptimizer(object):
 
         # create OCP
         ocp = AcadosOcp()
-        ocp.acados_include_path = acados_source_path + '/include'
-        ocp.acados_lib_path = acados_source_path + '/lib'
         ocp.model = model
-        ocp.dims.N = self.N
+        ocp.solver_options.N_horizon = self.N
         ocp.solver_options.tf = self.T
 
         # initialize parameters
@@ -73,10 +74,10 @@ class MobileRobotOptimizer(object):
         ocp.parameter_values = np.zeros(n_params)
 
         # cost type
-        Q = np.array([[1.0, 0.0, 0.0], [0.0, 5.0, 0.0], [0.0, 0.0, .1]])
+        Q = np.array([[1.0, 0.0, 0.0], [0.0, 5.0, 0.0], [0.0, 0.0, 0.1]])
         R = np.array([[0.5, 0.0], [0.0, 0.05]])
-        ocp.cost.cost_type = 'LINEAR_LS'
-        ocp.cost.cost_type_e = 'LINEAR_LS'
+        ocp.cost.cost_type = "LINEAR_LS"
+        ocp.cost.cost_type_e = "LINEAR_LS"
         ocp.cost.W = scipy.linalg.block_diag(Q, R)
         ocp.cost.W_e = Q
         ocp.cost.Vx = np.zeros((ny, nx))
@@ -101,20 +102,20 @@ class MobileRobotOptimizer(object):
         ocp.cost.yref_e = x_ref
 
         # solver options
-        ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-        ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+        ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
+        ocp.solver_options.hessian_approx = "GAUSS_NEWTON"
         # explicit Runge-Kutta integrator
-        ocp.solver_options.integrator_type = 'ERK'
+        ocp.solver_options.integrator_type = "ERK"
         ocp.solver_options.print_level = 0
-        ocp.solver_options.nlp_solver_type = 'SQP_RTI'
+        ocp.solver_options.nlp_solver_type = "SQP_RTI"
 
         # compile acados ocp
-        json_file = os.path.join('./'+model.name+'_acados_ocp.json')
+        json_file = os.path.join("./" + model.name + "_acados_ocp.json")
         self.solver = AcadosOcpSolver(ocp, json_file=json_file)
         self.integrator = AcadosSimSolver(ocp, json_file=json_file)
 
     def simulation(self, x0, xs):
-        simX = np.zeros((self.N+1, self.nx))
+        simX = np.zeros((self.N + 1, self.nx))
         simU = np.zeros((self.N, self.nu))
         x_current = x0
         simX[0, :] = x0.reshape(1, -1)
@@ -122,42 +123,58 @@ class MobileRobotOptimizer(object):
         time_record = np.zeros(self.N)
 
         # closed loop
-        self.solver.set(self.N, 'yref', xs)
+        self.solver.set(self.N, "yref", xs)
         for i in range(self.N):
-            self.solver.set(i, 'yref', xs_between)
+            self.solver.set(i, "yref", xs_between)
 
         for i in range(self.N):
             # solve ocp
             start = timeit.default_timer()
             ##  set inertial (stage 0)
-            self.solver.set(0, 'lbx', x_current)
-            self.solver.set(0, 'ubx', x_current)
+            self.solver.set(0, "lbx", x_current)
+            self.solver.set(0, "ubx", x_current)
             status = self.solver.solve()
 
-            if status != 0 :
-                raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
+            if status != 0:
+                raise Exception(
+                    "acados acados_ocp_solver returned status {}. Exiting.".format(
+                        status
+                    )
+                )
 
-            simU[i, :] = self.solver.get(0, 'u')
-            time_record[i] =  timeit.default_timer() - start
+            simU[i, :] = self.solver.get(0, "u")
+            time_record[i] = timeit.default_timer() - start
             # simulate system
-            self.integrator.set('x', x_current)
-            self.integrator.set('u', simU[i, :])
+            self.integrator.set("x", x_current)
+            self.integrator.set("u", simU[i, :])
 
             status_s = self.integrator.solve()
             if status_s != 0:
-                raise Exception('acados integrator returned status {}. Exiting.'.format(status))
+                raise Exception(
+                    "acados integrator returned status {}. Exiting.".format(status)
+                )
 
             # update
-            x_current = self.integrator.get('x')
-            simX[i+1, :] = x_current
+            x_current = self.integrator.get("x")
+            simX[i + 1, :] = x_current
 
         print("average estimation time is {}".format(time_record.mean()))
         print("max estimation time is {}".format(time_record.max()))
         print("min estimation time is {}".format(time_record.min()))
-        # Draw_MPC_point_stabilization_v1(rob_diam=0.3, init_state=x0, target_state=xs, robot_states=simX, )
+        Draw_MPC_point_stabilization_v1(
+            rob_diam=0.3,
+            init_state=x0,
+            target_state=xs,
+            robot_states=simX,
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     mobile_robot_model = MobileRobotModel()
-    opt = MobileRobotOptimizer(m_model=mobile_robot_model.model,
-                               m_constraint=mobile_robot_model.constraint, t_horizon=20, n_nodes=100)
-    opt.simulation(x0=np.array([0, 0, 0]), xs=np.array([2., 2., 0.]))
+    opt = MobileRobotOptimizer(
+        m_model=mobile_robot_model.model,
+        m_constraint=mobile_robot_model.constraint,
+        t_horizon=20,
+        n_nodes=100,
+    )
+    opt.simulation(x0=np.array([0, 0, 0]), xs=np.array([2.0, 2.0, 0.0]))
