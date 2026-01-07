@@ -4,7 +4,7 @@
 Author: Wei Luo
 Date: 2021-03-15 23:02:08
 LastEditors: Wei Luo
-LastEditTime: 2026-01-07 11:32:33
+LastEditTime: 2026-01-07 11:43:33
 Note: Note
 """
 
@@ -14,8 +14,6 @@ import shutil
 import errno
 import timeit
 import matplotlib
-
-matplotlib.use("TkAgg")
 from mobile_robot_model import MobileRobotModel
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 
