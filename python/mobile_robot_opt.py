@@ -4,7 +4,7 @@
 Author: Wei Luo
 Date: 2021-03-15 23:02:08
 LastEditors: Wei Luo
-LastEditTime: 2026-01-07 11:43:33
+LastEditTime: 2026-01-07 11:45:17
 Note: Note
 """
 
@@ -159,12 +159,12 @@ class MobileRobotOptimizer(object):
         print("average estimation time is {}".format(time_record.mean()))
         print("max estimation time is {}".format(time_record.max()))
         print("min estimation time is {}".format(time_record.min()))
-        Draw_MPC_point_stabilization_v1(
-            rob_diam=0.3,
-            init_state=x0,
-            target_state=xs,
-            robot_states=simX,
-        )
+        # Draw_MPC_point_stabilization_v1(
+        #     rob_diam=0.3,
+        #     init_state=x0,
+        #     target_state=xs,
+        #     robot_states=simX,
+        # )
 
 
 if __name__ == "__main__":
